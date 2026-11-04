@@ -11,8 +11,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol
 
-from rag_eval.config import ExperimentConfig
+from rag_eval.config import EmbedSpec, ExperimentConfig
 from rag_eval.corpus import Chunk, chunk_corpus, load_documents
+from rag_eval.expansion import expand_query, expansion_label, load_glossary
 from rag_eval.metrics import contains_answer, evidence_rank, summarize
 from rag_eval.prompts import build_answer_messages, build_judge_messages, parse_judgement
 from rag_eval.qa import QAItem, load_qa
@@ -26,24 +27,24 @@ class ChatModel(Protocol):
     def generate(self, messages: list[dict[str, str]], json_mode: bool = False) -> str: ...
 
 
-EmbedderFactory = Callable[[str], Embedder]
+EmbedderFactory = Callable[[EmbedSpec], Embedder]
 ChatFactory = Callable[[str], ChatModel]
 RerankerFactory = Callable[[str], Reranker]
 
 
 def _retrieve_all(
     cfg: ExperimentConfig,
-    items: list[QAItem],
+    queries: list[str],
     index: VectorIndex,
     q_vecs,
     reranker: Reranker | None,
 ) -> list[list[Chunk]]:
     k = cfg.rerank_candidates if reranker else cfg.top_k
     results = []
-    for item, vec in zip(items, q_vecs, strict=True):
+    for query, vec in zip(queries, q_vecs, strict=True):
         hits = index.search(vec, k)
         if reranker:
-            hits = rerank(reranker, item.question, hits, cfg.top_k)
+            hits = rerank(reranker, query, hits, cfg.top_k)
         results.append(hits)
     return results
 
@@ -55,10 +56,10 @@ def run_experiment(
     reranker_factory: RerankerFactory | None = None,
     config_path: Path | None = None,
 ) -> Path:
-    docs = load_documents(cfg.docs_dir)
+    cache_dir = cfg.output_dir / ".cache"
+    docs = load_documents(cfg.docs_dir, text_cache_dir=cache_dir / "text")
     items = load_qa(cfg.qa_path, docs)
     out_dir = _new_run_dir(cfg.output_dir, cfg.name)
-    cache_dir = cfg.output_dir / ".cache"
     if config_path is not None:
         shutil.copy(config_path, out_dir / "config.yaml")
     log.info("문서 %d개, 질문 %d개 → %s", len(docs), len(items), out_dir)
@@ -67,29 +68,42 @@ def run_experiment(
     rerankers = {
         name: (reranker_factory or _missing_reranker)(name) for name in cfg.rerankers if name
     }
+    # 확장은 검색 질의에만 적용하고, LLM에는 원래 질문을 준다 (답변 프롬프트를 조건 간 동일하게 유지).
+    expanded = {
+        path: [expand_query(it.question, load_glossary(path) if path else None) for it in items]
+        for path in cfg.query_expansions
+    }
     rows: list[dict[str, Any]] = []
-    questions = [it.question for it in items]
+    embedders: dict[str, Embedder] = {}
 
     with (out_dir / "rows.jsonl").open("w", encoding="utf-8") as fout:
         for ch in cfg.chunking:
             chunks = chunk_corpus(docs, ch.size, ch.overlap)
-            for embed_model in cfg.embed_models:
-                embedder = embedder_factory(embed_model)
-                vecs = embed_cached(embedder, embed_model, [c.text for c in chunks], cache_dir)
-                q_vecs = embed_cached(embedder, embed_model, questions, cache_dir)
-                index = VectorIndex(chunks, vecs)
-                for rr_name in cfg.rerankers:
-                    retrieved = _retrieve_all(cfg, items, index, q_vecs, rerankers.get(rr_name))
-                    for llm_name in cfg.llm_models or [None]:
-                        llm = chat_factory(llm_name) if llm_name else None
-                        log.info("chunk=%s embed=%s rerank=%s llm=%s",
-                                 ch.label, embed_model, rr_name, llm_name)
-                        for item, hits in zip(items, retrieved, strict=True):
-                            row = _evaluate_item(cfg, item, hits, llm, judge)
-                            row.update(chunking=ch.label, embed_model=embed_model,
-                                       reranker=rr_name or "none", llm_model=llm_name or "none")
-                            rows.append(row)
-                            fout.write(json.dumps(row, ensure_ascii=False) + "\n")
+            for spec in cfg.embed_models:
+                if spec.cache_id not in embedders:  # 접두어만 다른 조건은 모델을 다시 로드하지 않는다
+                    embedders[spec.cache_id] = embedder_factory(spec)
+                embedder = embedders[spec.cache_id]
+                passages = [spec.passage_prefix + c.text for c in chunks]
+                index = VectorIndex(chunks, embed_cached(embedder, spec.cache_id, passages, cache_dir))
+                for exp_path, queries in expanded.items():
+                    prefixed = [spec.query_prefix + q for q in queries]
+                    q_vecs = embed_cached(embedder, spec.cache_id, prefixed, cache_dir)
+                    for rr_name in cfg.rerankers:
+                        retrieved = _retrieve_all(cfg, queries, index, q_vecs, rerankers.get(rr_name))
+                        for llm_name in cfg.llm_models or [None]:
+                            llm = chat_factory(llm_name) if llm_name else None
+                            labels = {
+                                "chunking": ch.label,
+                                "embed_model": spec.name,
+                                "query_expansion": expansion_label(exp_path),
+                                "reranker": rr_name or "none",
+                                "llm_model": llm_name or "none",
+                            }
+                            log.info("%s", labels)
+                            for item, hits in zip(items, retrieved, strict=True):
+                                row = {**_evaluate_item(cfg, item, hits, llm, judge), **labels}
+                                rows.append(row)
+                                fout.write(json.dumps(row, ensure_ascii=False) + "\n")
 
     write_summary(summarize(rows), out_dir, cfg.top_k)
     return out_dir

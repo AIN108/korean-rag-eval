@@ -9,6 +9,7 @@ from typing import Any
 COLUMNS = [
     ("chunking", "청크(size/overlap)"),
     ("embed_model", "임베딩"),
+    ("query_expansion", "질의 확장"),
     ("reranker", "reranker"),
     ("llm_model", "LLM"),
     ("n", "n"),

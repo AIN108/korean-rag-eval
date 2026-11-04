@@ -9,3 +9,6 @@ dist/
 
 # 실험 결과와 임베딩 캐시는 커밋하지 않는다. README용 대표 결과는 docs/에 따로 복사.
 results/
+
+# 대용량 원문 PDF는 저장소에 넣지 않는다 (README의 데이터 준비 절차 참고)
+data/country_studies/

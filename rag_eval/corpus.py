@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import hashlib
+import logging
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
-SUPPORTED_SUFFIXES = (".txt", ".md")
+log = logging.getLogger(__name__)
+
+SUPPORTED_SUFFIXES = (".txt", ".md", ".pdf")
 # 청크 끝을 자를 때 선호하는 경계 문자 (앞쪽이 우선순위 높음).
 _BOUNDARIES = ("\n\n", "\n", ". ", "다. ", "? ", "! ", " ")
 
@@ -31,7 +35,41 @@ def normalize_text(text: str) -> str:
     return unicodedata.normalize("NFC", text).replace("\r\n", "\n").replace("\r", "\n")
 
 
-def load_documents(docs_dir: Path) -> list[Document]:
+def _read_pdf(path: Path) -> str:
+    try:
+        from pypdf import PdfReader
+    except ImportError as e:
+        raise ImportError("PDF 문서에는 pypdf가 필요합니다: pip install -e '.[pdf]'") from e
+    reader = PdfReader(str(path))
+    return "\n\n".join(page.extract_text() or "" for page in reader.pages)
+
+
+def _read_pdf_cached(path: Path, cache_dir: Path | None) -> str:
+    """PDF 텍스트 추출은 느리므로 (경로, 크기, 수정 시각) 기준으로 결과를 캐시한다."""
+    if cache_dir is None:
+        return _read_pdf(path)
+    stat = path.stat()
+    key = hashlib.sha256(f"{path.resolve()}|{stat.st_size}|{stat.st_mtime_ns}".encode()).hexdigest()[:24]
+    cached = cache_dir / f"{key}.txt"
+    if cached.is_file():
+        return cached.read_text(encoding="utf-8")
+    text = _read_pdf(path)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cached.write_text(text, encoding="utf-8")
+    return text
+
+
+def _read_document(path: Path, cache_dir: Path | None) -> str:
+    if path.suffix.lower() == ".pdf":
+        return _read_pdf_cached(path, cache_dir)
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as e:
+        raise ValueError(f"UTF-8로 읽을 수 없는 문서입니다: {path}") from e
+
+
+def load_documents(docs_dir: Path, text_cache_dir: Path | None = None) -> list[Document]:
+    """docs_dir 아래 .txt/.md/.pdf 문서를 읽는다. 텍스트가 없는 문서(스캔 PDF 등)는 경고 후 건너뛴다."""
     if not docs_dir.is_dir():
         raise FileNotFoundError(f"문서 디렉터리가 없습니다: {docs_dir}")
     paths = sorted(p for p in docs_dir.rglob("*") if p.suffix.lower() in SUPPORTED_SUFFIXES)
@@ -39,12 +77,13 @@ def load_documents(docs_dir: Path) -> list[Document]:
         raise FileNotFoundError(f"{docs_dir}에 {'/'.join(SUPPORTED_SUFFIXES)} 문서가 없습니다")
     docs = []
     for p in paths:
-        try:
-            text = normalize_text(p.read_text(encoding="utf-8"))
-        except UnicodeDecodeError as e:
-            raise ValueError(f"UTF-8로 읽을 수 없는 문서입니다: {p}") from e
+        text = normalize_text(_read_document(p, text_cache_dir))
         if text.strip():
             docs.append(Document(doc_id=p.relative_to(docs_dir).as_posix(), text=text))
+        else:
+            log.warning("텍스트를 추출하지 못해 건너뜁니다 (스캔 PDF일 수 있음): %s", p)
+    if not docs:
+        raise ValueError(f"{docs_dir}에서 텍스트를 추출한 문서가 없습니다")
     return docs
 
 

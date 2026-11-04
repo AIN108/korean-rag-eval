@@ -7,16 +7,20 @@ import logging
 import sys
 from pathlib import Path
 
-from rag_eval.config import ConfigError, load_config
+from rag_eval.config import ConfigError, EmbedSpec, load_config
 from rag_eval.corpus import chunk_corpus, load_documents
+from rag_eval.expansion import load_glossary
 from rag_eval.ollama import OllamaChat, OllamaClient, OllamaEmbedder, OllamaError
 from rag_eval.qa import load_qa
 
 
 def cmd_validate(config_path: Path) -> int:
     cfg = load_config(config_path)
-    docs = load_documents(cfg.docs_dir)
+    docs = load_documents(cfg.docs_dir, text_cache_dir=cfg.output_dir / ".cache" / "text")
     items = load_qa(cfg.qa_path, docs)
+    for path in cfg.query_expansions:
+        if path:
+            print(f"  용어집 {path.name}: {len(load_glossary(path))}개 항목")
     print(f"문서 {len(docs)}개, 질문 {len(items)}개 — 검증 통과")
     for ch in cfg.chunking:
         chunks = chunk_corpus(docs, ch.size, ch.overlap)
@@ -33,7 +37,7 @@ def cmd_run(config_path: Path) -> int:
     try:
         out = run_experiment(
             cfg,
-            embedder_factory=lambda m: OllamaEmbedder(client, m),
+            embedder_factory=lambda spec: _load_embedder(spec, client),
             chat_factory=lambda m: OllamaChat(client, m, cfg.temperature, cfg.seed),
             reranker_factory=_load_reranker,
             config_path=config_path,
@@ -42,6 +46,14 @@ def cmd_run(config_path: Path) -> int:
         client.close()
     print(f"완료: {out / 'summary.md'}")
     return 0
+
+
+def _load_embedder(spec: EmbedSpec, client: OllamaClient):
+    if spec.backend == "hf":
+        from rag_eval.retrieval import SentenceTransformerEmbedder
+
+        return SentenceTransformerEmbedder(spec.model)
+    return OllamaEmbedder(client, spec.model)
 
 
 def _load_reranker(name: str):

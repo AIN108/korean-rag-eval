@@ -1,6 +1,8 @@
 # korean-rag-eval
 
-로컬 LLM(Ollama)만으로 한국어 문서 RAG의 구성 요소 — **청크 크기, 임베딩 모델, reranker, LLM** — 를 바꿔 가며 검색 정확도와 답변 정확도를 같은 조건에서 비교하는 실험 도구입니다. API 비용 없이 소비자급 GPU 한 장에서 돌아가는 것을 목표로 합니다.
+로컬 LLM(Ollama)만으로 한국어 질문 RAG의 구성 요소 — **청크 크기, 임베딩 모델(접두어 포함), 질의 확장, reranker, LLM** — 를 바꿔 가며 검색 정확도와 답변 정확도를 같은 조건에서 비교하는 실험 도구입니다. API 비용 없이 소비자급 GPU 한 장에서 돌아가는 것을 목표로 합니다.
+
+직접 만들어 쓰던 로컬 RAG 앱([AIN108/lags2.py](https://github.com/AIN108/lags2.py))에서 버전마다 바꿔 온 설계 선택(청크 크기, e5 vs bge-m3, 한→영 질의 확장)이 실제로 효과가 있었는지 정량으로 확인하려고 만들었습니다.
 
 > 결과 요약: _(실험 후 여기에 대표 결과 표와 그림을 넣습니다)_
 
@@ -23,7 +25,7 @@
 ```bash
 git clone https://github.com/AIN108/korean-rag-eval && cd korean-rag-eval
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"            # reranker까지 쓰려면 ".[dev,rerank]"
+pip install -e ".[dev]"            # HF 임베딩·reranker는 ".[dev,hf]", PDF는 ".[pdf]"
 
 ollama pull bge-m3 && ollama pull qwen2.5:7b   # 설정 파일에 적은 모델을 받습니다
 
@@ -40,9 +42,42 @@ python -m rag_eval run --config configs/default.yaml -v          # 전체 비교
 
 임베딩은 `results/.cache/`에 캐시되어, LLM만 바꿔 재실행할 때는 다시 계산하지 않습니다.
 
+## 실험 설정
+
+설정 파일의 리스트 항목들의 모든 조합을 실행합니다.
+
+```yaml
+embed_models:
+  - bge-m3                                   # 문자열 = Ollama 임베딩 모델
+  - { name: bge-m3-hf, model: BAAI/bge-m3, backend: hf }   # Hugging Face (pip install -e ".[hf]")
+  - name: e5-large+prefix                    # 같은 모델의 접두어 유무도 별도 조건으로 비교
+    model: intfloat/multilingual-e5-large
+    backend: hf
+    query_prefix: "query: "
+    passage_prefix: "passage: "
+
+query_expansions:                            # 검색 질의에만 적용, LLM에는 원래 질문 전달
+  - null
+  - data/glossary/military_ko_en.yaml        # {한국어 용어: 영어 대응어} 용어집
+```
+
+### 기존 앱 설계 검증 실험 (`configs/lags_ablation.yaml`)
+
+| 비교 항목 | 조건 | 출처 |
+|---|---|---|
+| 청크 | 1000/200 vs 800/100 | `rag.py` → v5 이후 |
+| 임베딩 | multilingual-e5-large vs bge-m3 | v5·v6 vs `lags3.py` |
+| e5 접두어 | 없음(원본 앱) vs `query:`/`passage:` | e5 모델 권장 사용법 |
+| 질의 확장 | 없음 vs 한→영 용어집 | `preprocess_question` |
+| LLM | qwen2.5:7b vs gemma3n:e2b | `lags5.py` 지원 모델 |
+
+원본 앱은 LangChain `RecursiveCharacterTextSplitter`를 쓰고, 이 도구는 문장 경계를 고려한 자체 분할기를 쓰므로 청크 경계가 완전히 같지는 않습니다.
+
 ## 데이터 형식
 
-`data/docs/`에 `.txt` / `.md` 문서(UTF-8)를 넣고, `data/qa/*.jsonl`에 한 줄에 하나씩 질문을 작성합니다.
+`data/docs/`에 `.txt` / `.md` / `.pdf` 문서를 넣고, `data/qa/*.jsonl`에 한 줄에 하나씩 질문을 작성합니다. PDF는 `pip install -e ".[pdf]"`가 필요하며, 추출한 텍스트는 `results/.cache/text/`에 캐시됩니다. 텍스트 층이 없는 스캔 PDF는 경고 후 건너뜁니다.
+
+`lags_ablation` 실험용 문서는 미 의회도서관 Country Studies(Federal Research Division) PDF를 `data/country_studies/`에 넣어 사용합니다. 용량 때문에 저장소에는 포함하지 않습니다(`.gitignore`). 미국 연방정부 저작물이라 퍼블릭 도메인으로 알려져 있지만, 질의셋을 공개하기 전에 각 판본의 출처 페이지에서 이용 조건을 확인하세요. 상용 출판물(예: IISS The Military Balance)은 질의셋 근거 문장으로도 쓰지 않습니다.
 
 ```json
 {"id": "q001", "question": "GPU 서버는 언제까지 예약해야 하나요?", "answer": "사용 3일 전까지",
@@ -59,9 +94,10 @@ python -m rag_eval run --config configs/default.yaml -v          # 전체 비교
 ```
 rag_eval/
   config.py     설정 로드·검증
-  corpus.py     문서 로드, 문장 경계를 고려한 문자 단위 청크 분할 (원문 위치 보존)
+  corpus.py     문서(txt/md/pdf) 로드, 문장 경계를 고려한 문자 단위 청크 분할 (원문 위치 보존)
   qa.py         QA셋 로드, 근거 위치 검증
-  retrieval.py  코사인 벡터 검색, 임베딩 캐시, CrossEncoder reranker
+  expansion.py  용어집 기반 질의 확장
+  retrieval.py  코사인 벡터 검색, 임베딩 캐시, HF 임베딩, CrossEncoder reranker
   ollama.py     Ollama /api/embed, /api/chat 클라이언트
   prompts.py    답변·채점 프롬프트
   metrics.py    Recall@k, MRR, 정답 포함률, 집계

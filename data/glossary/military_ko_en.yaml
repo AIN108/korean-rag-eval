@@ -1,0 +1,31 @@
+# 원본 RAG 앱(lags5.py)의 preprocess_question이 쓰던 한→영 매핑을 그대로 옮긴 용어집.
+# 질문에 키가 포함되면 값(들)을 검색 질의 뒤에 덧붙인다.
+
+# 국가명 (ImprovedEconomicDataProcessor.country_mapping)
+프랑스: France
+독일: Germany
+영국: UK
+미국: USA
+일본: Japan
+중국: China
+한국: S. Korea
+대한민국: S. Korea
+이탈리아: Italy
+스페인: Spain
+캐나다: Canada
+호주: Australia
+브라질: Brazil
+인도: India
+러시아: Russia
+멕시코: Mexico
+
+# 군사 용어 (preprocess_question.military_keywords)
+OOB: order of battle force structure 편제
+전력: military force combat power
+무기: weapons armament
+장비: equipment military hardware
+편제: order of battle organization
+부대: unit formation military
+병력: manpower troops personnel
+작전: operation military campaign
+전투: battle combat engagement

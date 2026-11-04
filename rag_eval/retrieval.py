@@ -64,6 +64,26 @@ def rerank(reranker: Reranker, query: str, chunks: list[Chunk], k: int) -> list[
     return [chunks[i] for i in order[:k]]
 
 
+class SentenceTransformerEmbedder:
+    """Hugging Face 임베딩 모델 (backend: hf). `pip install -e '.[hf]'` 필요."""
+
+    def __init__(self, model_name: str, batch_size: int = 16) -> None:
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as e:
+            raise ImportError(
+                "backend: hf 사용에는 sentence-transformers가 필요합니다: pip install -e '.[hf]'"
+            ) from e
+        self.model = SentenceTransformer(model_name)
+        self.batch_size = batch_size
+
+    def embed(self, texts: list[str]) -> np.ndarray:
+        vectors = self.model.encode(
+            texts, batch_size=self.batch_size, normalize_embeddings=True, show_progress_bar=False
+        )
+        return np.asarray(vectors, dtype=np.float32)
+
+
 class CrossEncoderReranker:
     """sentence-transformers CrossEncoder 래퍼. `pip install .[rerank]` 필요."""
 
@@ -72,7 +92,7 @@ class CrossEncoderReranker:
             from sentence_transformers import CrossEncoder
         except ImportError as e:
             raise ImportError(
-                "reranker 사용에는 sentence-transformers가 필요합니다: pip install -e '.[rerank]'"
+                "reranker 사용에는 sentence-transformers가 필요합니다: pip install -e '.[hf]'"
             ) from e
         self.model = CrossEncoder(model_name)
 

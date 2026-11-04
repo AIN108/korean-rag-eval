@@ -1,0 +1,40 @@
+# 기존 로컬 RAG 앱(AIN108/lags2.py)이 버전을 거치며 바꿔 온 설계 선택을 같은 질의셋으로 비교한다.
+#   - 청크: rag.py 1000/200 → v5 이후 800/100
+#   - 임베딩: multilingual-e5-large(v5, v6) vs bge-m3(lags3) / e5 권장 접두어 유무
+#   - 질의 확장: preprocess_question의 한→영 용어 덧붙이기 유무
+#   - LLM: lags5.py가 지원하는 qwen2.5:7b, gemma3n:e2b
+# 문서: 미 의회도서관 Country Studies PDF (저장소에는 포함하지 않음, README 참고)
+# 필요 패키지: pip install -e ".[hf,pdf]"
+name: lags-ablation
+docs_dir: data/country_studies
+qa_path: data/qa/country_studies.jsonl
+output_dir: results
+
+chunking:
+  - { size: 1000, overlap: 200 }
+  - { size: 800, overlap: 100 }
+
+embed_models:
+  - { name: e5-large, model: intfloat/multilingual-e5-large, backend: hf }
+  - name: e5-large+prefix
+    model: intfloat/multilingual-e5-large
+    backend: hf
+    query_prefix: "query: "
+    passage_prefix: "passage: "
+  - { name: bge-m3, model: BAAI/bge-m3, backend: hf }
+
+query_expansions:
+  - null
+  - data/glossary/military_ko_en.yaml
+
+rerankers: [null]
+
+llm_models:
+  - qwen2.5:7b
+  - gemma3n:e2b
+judge_model: qwen2.5:7b
+
+top_k: 8              # 원본 앱의 k
+min_evidence_coverage: 0.5
+temperature: 0.1      # 원본 앱 설정
+seed: 42

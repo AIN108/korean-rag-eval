@@ -10,7 +10,7 @@ from typing import Any
 from rag_eval.corpus import Chunk
 from rag_eval.qa import QAItem
 
-GROUP_KEYS = ("chunking", "embed_model", "reranker", "llm_model")
+GROUP_KEYS = ("chunking", "embed_model", "query_expansion", "reranker", "llm_model")
 _STRIP = re.compile(r"[\s\.,·!?\"'()\[\]~\-]+")
 
 
@@ -39,7 +39,8 @@ def contains_answer(prediction: str, reference: str) -> bool:
 def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     groups: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
     for r in rows:
-        groups[tuple(r[k] for k in GROUP_KEYS)].append(r)
+        # 이전 버전 결과(rows.jsonl)에는 없는 키가 있을 수 있어 "none"으로 채운다
+        groups[tuple(r.get(k, "none") for k in GROUP_KEYS)].append(r)
 
     summary = []
     for key, rs in groups.items():

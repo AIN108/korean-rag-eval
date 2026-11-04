@@ -16,8 +16,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-rerank = ["sentence-transformers>=3.0"]
-dev = ["pytest>=8.0", "ruff>=0.5"]
+hf = ["sentence-transformers>=3.0"]
+rerank = ["sentence-transformers>=3.0"]  # hf와 동일 (이전 이름 호환)
+pdf = ["pypdf>=4.0"]
+dev = ["pytest>=8.0", "ruff>=0.5", "pypdf>=4.0"]
 
 [project.scripts]
 rag-eval = "rag_eval.cli:main"
