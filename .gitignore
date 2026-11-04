@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# 실험 결과와 임베딩 캐시는 커밋하지 않는다. README용 대표 결과는 docs/에 따로 복사.
+results/

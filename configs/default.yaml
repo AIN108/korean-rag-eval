@@ -1,0 +1,32 @@
+# 전체 비교 실험. 모델명은 `ollama list` 결과에 맞게 수정하세요.
+# 조합 수 = len(chunking) × len(embed_models) × len(rerankers) × max(1, len(llm_models))
+name: default
+docs_dir: data/docs
+qa_path: data/qa/sample.jsonl
+output_dir: results
+ollama_url: http://localhost:11434   # OLLAMA_HOST 환경변수가 있으면 그 값을 우선 사용
+
+chunking:            # 문자 수 기준
+  - { size: 300, overlap: 50 }
+  - { size: 600, overlap: 100 }
+  - { size: 1000, overlap: 150 }
+
+embed_models:
+  - bge-m3
+  - nomic-embed-text
+
+rerankers:           # null = reranker 없음. 모델은 Hugging Face ID (pip install -e '.[rerank]')
+  - null
+  - BAAI/bge-reranker-v2-m3
+
+llm_models:
+  - qwen2.5:7b
+  - llama3.1:8b
+
+judge_model: qwen2.5:7b   # null이면 LLM 채점 생략 (정답 포함률만 계산)
+
+top_k: 4
+rerank_candidates: 20
+min_evidence_coverage: 0.5   # 근거 문장의 50% 이상을 덮는 청크가 검색되면 hit
+temperature: 0.0
+seed: 42

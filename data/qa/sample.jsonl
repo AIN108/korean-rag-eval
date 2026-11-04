@@ -1,0 +1,6 @@
+{"id": "q001", "question": "GPU 서버는 언제까지 예약해야 하나요?", "answer": "사용 3일 전까지", "doc_id": "sample_lab_rules.md", "evidence": "공용 GPU 서버는 예약 시스템을 통해 사용 3일 전까지 예약해야 한다."}
+{"id": "q002", "question": "한 사람이 GPU 서버를 연속으로 예약할 수 있는 최대 시간은?", "answer": "48시간", "doc_id": "sample_lab_rules.md", "evidence": "1인당 연속 예약은 최대 48시간으로 제한한다."}
+{"id": "q003", "question": "예약 우선권은 누구에게 주어지나요?", "answer": "학위논문 심사를 30일 이내에 앞둔 사람", "doc_id": "sample_lab_rules.md", "evidence": "학위논문 심사를 30일 이내에 앞둔 사람은 예약 우선권을 가진다."}
+{"id": "q004", "question": "안전 교육을 받지 않으면 어떤 장비를 쓸 수 없나요?", "answer": "납땜 장비", "doc_id": "sample_lab_rules.md", "evidence": "교육을 이수하지 않은 사람은 납땜 장비를 사용할 수 없다."}
+{"id": "q005", "question": "사용 대장을 두 번 기록하지 않으면 어떻게 되나요?", "answer": "2주간 예약이 제한된다", "doc_id": "sample_lab_rules.md", "evidence": "2회 위반 시 2주간 예약을 제한한다."}
+{"id": "q006", "question": "방문 연구자가 장비를 쓰려면 무엇이 필요한가요?", "answer": "지도교수의 승인", "doc_id": "sample_lab_rules.md", "evidence": "방문 연구자는 지도교수의 승인을 받은 경우에만 장비를 사용할 수 있다."}

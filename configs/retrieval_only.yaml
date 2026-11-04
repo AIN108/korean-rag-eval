@@ -1,0 +1,17 @@
+# LLM 없이 검색 지표(Recall@k, MRR)만 빠르게 비교. 청크·임베딩 탐색용.
+name: retrieval-only
+docs_dir: data/docs
+qa_path: data/qa/sample.jsonl
+output_dir: results
+
+chunking:
+  - { size: 200, overlap: 0 }
+  - { size: 300, overlap: 50 }
+  - { size: 600, overlap: 100 }
+
+embed_models:
+  - bge-m3
+
+rerankers: [null]
+llm_models: []
+top_k: 3

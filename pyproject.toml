@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "korean-rag-eval"
+version = "0.1.0"
+description = "Ollama 기반 로컬 LLM으로 한국어 RAG 구성(청크, 임베딩, reranker, LLM)을 비교 평가하는 도구"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+rerank = ["sentence-transformers>=3.0"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[project.scripts]
+rag-eval = "rag_eval.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["rag_eval*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
