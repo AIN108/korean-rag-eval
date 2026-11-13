@@ -10,26 +10,45 @@
 
 | 지표 | 의미 | 계산 방식 |
 |---|---|---|
-| Recall@k | 정답 근거가 상위 k개 검색 결과에 들어왔는가 | QA셋에 표시한 근거 문장 구간을 50% 이상 덮는 청크가 있으면 hit |
+| Recall@k (기존 이름) | 필요한 근거 중 하나 이상을 찾았는가 | 답변 가능한 질문별 hit 비율. 단일 근거에서는 기존 동작과 동일 |
+| 필수 근거 회수율 / 전체 근거 hit@k | 복수 근거를 얼마나 찾았는가 | 질문별 근거 회수 비율의 평균 / 필요한 근거를 모두 찾은 질문 비율 |
 | MRR | 근거 청크가 몇 번째로 검색됐는가 | 1 / (첫 hit 순위) 평균 |
 | 정답 포함률 | 답변에 정답 문자열이 들어 있는가 | 공백·문장부호 제거 후 포함 여부 (짧은 사실형 정답용 보조 지표) |
-| 채점 정확도 | 답변이 정답과 의미상 일치하는가 | 별도 채점 LLM이 JSON으로 판정 (해석 불가 응답은 집계 제외) |
-| 평균 지연 | 답변 생성 시간 | 질문당 LLM 호출 시간 |
+| 유효 채점 정확도 / 채점 유효율 | 답변이 정답과 일치하며 채점이 얼마나 유효한가 | JSON 해석에 성공한 채점의 정확도와 성공 수/전체 시도 수를 함께 보고 |
+| 답변 불가 정답률 | 근거가 없을 때 정해진 답변 거부를 하는가 | 답변 불가 질문을 검색 지표와 분리하여 집계 |
+| 단계별 평균 지연 | 검색·재정렬·답변 생성 시간 | 임베딩·모델 적재 시간은 제외 |
 
-검색 hit를 "같은 문서인가"가 아니라 **근거 문장의 원문 위치**로 판정하기 때문에, 청크 크기를 바꿔도 공정하게 비교됩니다.
+검색 hit는 "같은 문서인가" 대신 **근거 문장의 원문 위치**로 판정합니다. 다만 같은 top-k라도 청크 크기에 따라 문맥 길이가 달라지며, 현재 입력 토큰 예산을 맞추지는 않습니다.
+
+실자료로 바로 시작하려면 아래 Country Studies 파일럿을 사용하고, 다른 자료를 추가하려면 [데이터 준비 안내](docs/DATASET_GUIDE.md)를 참고하세요. 기존 6문항은 동작 확인용이고, [새 형식의 12문항 예제](data/examples/qa.jsonl)도 허구 자료이므로 대표 성능으로 사용하지 않습니다.
+
+[Country Studies 실자료 파일럿 v2](data/country_studies_pilot_v2/README.md)는 한국·북한·일본·중국 원문 4권의 추출 텍스트와 한국어 40문항을 함께 포함합니다. 개발용 20문항과 최종 평가용 20문항으로 분리했으며, 답변 가능한 32문항의 원문 근거 42개를 검증했습니다. 저장소를 받으면 별도 PDF·ZIP 복사 없이 실행할 수 있습니다. 실제 모델 성능은 아직 측정하지 않았으며, [v1의 기존 30문항](data/country_studies_pilot_v1/README.md)도 유지합니다.
 
 ## 빠른 시작
 
-전제: Python 3.10+, [Ollama](https://ollama.com) 설치 및 실행 중.
+전제: Python 3.10+. 데이터 검증에는 모델이 필요하지 않으며, 검색·답변 실험에는 [Ollama](https://ollama.com)가 실행 중이어야 합니다.
 
 ```bash
 git clone https://github.com/AIN108/korean-rag-eval && cd korean-rag-eval
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"            # HF 임베딩·reranker는 ".[dev,hf]", PDF는 ".[pdf]"
 
+python -m rag_eval validate --config configs/country_studies_pilot_v2_dev.yaml
+python -m rag_eval validate --config configs/country_studies_pilot_v2_test.yaml
+
+ollama pull bge-m3
+python -m rag_eval run --config configs/country_studies_pilot_v2_dev.yaml -v  # 실자료 검색 전용
+```
+
+개발용으로 설정을 정한 뒤 `country_studies_pilot_v2_test.yaml`로 최종 평가합니다. 기본 `llm_models: []`는 검색만 실행하므로 답변 정확도를 측정하려면 답변 모델을 지정합니다. 위 가상환경 활성화 명령은 Bash용이며, Windows PowerShell에서는 `.venv\Scripts\Activate.ps1`을 사용합니다.
+
+허구 자료로 도구 동작만 확인하거나 기존 비교 설정을 실행하려면 아래 명령을 사용합니다.
+
+```bash
 ollama pull bge-m3 && ollama pull qwen2.5:7b   # 설정 파일에 적은 모델을 받습니다
 
 python -m rag_eval validate --config configs/default.yaml   # 문서·QA셋 검증
+python -m rag_eval validate --config configs/schema_demo.yaml  # 복수 근거·답변 불가·split 예제 검증
 python -m rag_eval run --config configs/retrieval_only.yaml -v   # 검색 지표만 (빠름)
 python -m rag_eval run --config configs/default.yaml -v          # 전체 비교
 ```
@@ -37,8 +56,14 @@ python -m rag_eval run --config configs/default.yaml -v          # 전체 비교
 결과는 `results/<name>-<시각>/`에 저장됩니다.
 
 - `summary.md`, `summary.csv`: 설정 조합별 지표
+- `summary_by_type.md`, `summary_by_type.csv`: 질문 유형별 지표
 - `rows.jsonl`: 질문별 검색 결과·답변·채점 (오답 분석용)
 - `config.yaml`: 실행에 쓴 설정 사본 (재현용)
+- `manifest.json`: 유효 설정·데이터/코드 해시·런타임 버전·실행 상태
+
+채점 실패는 `judge_failed_n`, `judge_coverage`로 드러나며 `judge_acc`는 유효 채점만을 분모로 삼습니다. `judge_correct_rate`는 전체 채점 시도 중 정답으로 확인된 비율입니다. 둘을 함께 보아야 하며 미채점 항목을 실제 오답으로 확정하는 지표는 아닙니다. 요청 오류가 남은 실행은 결과를 저장하되 CLI가 종료 코드 1을 반환합니다.
+
+기본 `judge_model`은 `null`입니다. 자동 채점하려면 답변 모델과 다른 모델을 직접 지정하고 일부 표본을 원문과 대조하세요. 답변 모델과 같은 모델을 지정하면 경고가 출력됩니다.
 
 임베딩은 `results/.cache/`에 캐시되어, LLM만 바꿔 재실행할 때는 다시 계산하지 않습니다.
 
@@ -77,7 +102,7 @@ query_expansions:                            # 검색 질의에만 적용, LLM�
 
 `data/docs/`에 `.txt` / `.md` / `.pdf` 문서를 넣고, `data/qa/*.jsonl`에 한 줄에 하나씩 질문을 작성합니다. PDF는 `pip install -e ".[pdf]"`가 필요하며, 추출한 텍스트는 `results/.cache/text/`에 캐시됩니다. 텍스트 층이 없는 스캔 PDF는 경고 후 건너뜁니다.
 
-`lags_ablation` 실험용 문서는 미 의회도서관 Country Studies(Federal Research Division) PDF를 `data/country_studies/`에 넣어 사용합니다. 용량 때문에 저장소에는 포함하지 않습니다(`.gitignore`). 미국 연방정부 저작물이라 퍼블릭 도메인으로 알려져 있지만, 질의셋을 공개하기 전에 각 판본의 출처 페이지에서 이용 조건을 확인하세요. 상용 출판물(예: IISS The Military Balance)은 질의셋 근거 문장으로도 쓰지 않습니다.
+`country_studies_pilot_v2_*` 설정은 저장소에 포함한 `data/country_studies_pilot_v2/docs/`의 텍스트를 사용합니다. 원본 PDF는 포함하지 않습니다. 기존 `lags_ablation` 설정을 그대로 쓰려면 별도로 PDF를 `data/country_studies/`에 넣어야 합니다. 출처·해시와 권리 안내는 파일럿의 `sources.jsonl`에 기록했습니다. 새로운 자료를 공개할 때에도 해당 판본의 이용 조건을 확인합니다.
 
 ```json
 {"id": "q001", "question": "GPU 서버는 언제까지 예약해야 하나요?", "answer": "사용 3일 전까지",
@@ -87,7 +112,9 @@ query_expansions:                            # 검색 질의에만 적용, LLM�
 - `doc_id`: `docs_dir` 기준 상대 경로
 - `evidence`: 정답 근거가 되는 원문 문장. 공백·줄바꿈 차이는 무시하고 찾습니다. 본문에 없으면 `validate`가 행 번호와 함께 알려 줍니다.
 
-동봉된 `sample_lab_rules.md`는 동작 확인용으로 직접 작성한 가상 문서입니다. 실험에는 재배포가 허용된 공개 문서(예: 공공누리 제1유형 표시 자료)를 쓰고, 문서마다 출처와 라이선스를 `data/docs/SOURCES.md`에 기록하세요.
+새 형식은 `evidences: [{doc_id, text, occurrence?}, ...]`로 필요한 근거 여러 개를 지정합니다. `answerable: false`인 질문은 정답·근거 없이 작성합니다. `answer_aliases`, `question_type`, `split`, `source_group`도 선택적으로 지원합니다. `qa_split: dev` 또는 `test`로 실행 대상을 선택하고, 같은 `source_group`이 두 split에 겹치면 검증이 실패합니다. 기존 단일 근거 형식은 계속 지원합니다.
+
+동봉된 `sample_lab_rules.md`는 동작 확인용으로 직접 작성한 가상 문서입니다. 실제 자료의 출처·이용 범위는 검색 대상 밖인 `data/private/sources.jsonl` 등에 기록합니다. 실제 문서와 검수 중인 QA를 두는 `data/private/`는 Git에서 제외됩니다. PDF의 평가용 텍스트는 `python -m rag_eval export-text --config configs/user_data.example.yaml`로 내보낼 수 있습니다.
 
 ## 구조
 
@@ -100,6 +127,7 @@ rag_eval/
   retrieval.py  코사인 벡터 검색, 임베딩 캐시, HF 임베딩, CrossEncoder reranker
   ollama.py     Ollama /api/embed, /api/chat 클라이언트
   prompts.py    답변·채점 프롬프트
+  provenance.py 데이터·설정·코드 지문과 실행 상태 기록
   metrics.py    Recall@k, MRR, 정답 포함률, 집계
   runner.py     설정 조합 순회
   report.py     CSV·Markdown 출력
@@ -112,6 +140,10 @@ tests/          Ollama 없이 돌아가는 단위·통합 테스트 (가짜 임�
 
 - 청크 크기는 토큰이 아니라 **문자 수** 기준입니다. 모델마다 토크나이저가 달라, 비교 기준을 통일하려고 문자 수를 썼습니다.
 - LLM 채점은 채점 모델의 편향을 그대로 따릅니다. 답변을 생성한 모델과 다른 모델로 채점하고, 일부 표본은 직접 검수하는 것을 권합니다.
+- 정답 포함률은 부정문·조건 오류도 맞다고 잡을 수 있는 보조 지표입니다. 예를 들어 `48시간이 아니라 24시간`에도 `48시간`은 포함됩니다.
+- 답변 불가 평가는 정해진 거부 문구와의 일치 여부를 측정하며, 모든 형태의 의미상 거부를 판정하지는 않습니다.
+- 복수 근거의 각 hit는 개별 청크가 근거 구간을 설정 비율 이상 덮는지 판정합니다. 여러 청크의 부분 구간을 합치는 평가는 하지 않습니다.
+- 중단된 실행의 행별 결과는 남지만 자동 재개는 지원하지 않습니다. 모델 태그를 유지한 채 가중치를 바꾸면 임베딩 캐시도 갱신해야 합니다.
 - `temperature=0`, 고정 `seed`를 쓰지만 Ollama 버전이나 하드웨어에 따라 출력이 완전히 같지 않을 수 있습니다.
 
 ## 라이선스

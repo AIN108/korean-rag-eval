@@ -23,7 +23,7 @@ llm_models:
   - qwen2.5:7b
   - llama3.1:8b
 
-judge_model: qwen2.5:7b   # null이면 LLM 채점 생략 (정답 포함률만 계산)
+judge_model: null   # 채점하려면 답변 모델과 다른 모델을 명시. 기본은 자동 채점 생략
 
 top_k: 4
 rerank_candidates: 20

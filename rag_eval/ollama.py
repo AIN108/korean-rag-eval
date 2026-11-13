@@ -24,17 +24,29 @@ class OllamaClient:
         url = f"{self.base_url}{path}"
         try:
             resp = self._session.post(url, json=payload, timeout=self.timeout)
-        except requests.ConnectionError as e:
+        except requests.Timeout as e:
+            raise OllamaError(f"Ollama 요청 시간이 {self.timeout:g}초를 초과했습니다 ({path})") from e
+        except requests.RequestException as e:
             raise OllamaError(
                 f"Ollama 서버에 연결할 수 없습니다 ({self.base_url}). `ollama serve` 실행 여부를 확인하세요."
             ) from e
-        if resp.status_code == 404 and "model" in payload:
-            raise OllamaError(
-                f"모델 '{payload['model']}'을 찾을 수 없습니다. `ollama pull {payload['model']}`로 받으세요."
-            )
-        if not resp.ok:
-            raise OllamaError(f"Ollama 요청 실패 {resp.status_code} {path}: {resp.text[:300]}")
-        return resp.json()
+        try:
+            if resp.status_code == 404 and "model" in payload:
+                raise OllamaError(
+                    f"모델 '{payload['model']}'을 찾을 수 없습니다. "
+                    f"`ollama pull {payload['model']}`로 받으세요."
+                )
+            if not resp.ok:
+                raise OllamaError(f"Ollama 요청 실패 {resp.status_code} {path}: {resp.text[:300]}")
+            try:
+                data = resp.json()
+            except ValueError as e:
+                raise OllamaError(f"Ollama 응답이 올바른 JSON이 아닙니다 ({path})") from e
+            if not isinstance(data, dict):
+                raise OllamaError(f"Ollama 응답은 JSON 객체여야 합니다 ({path})")
+            return data
+        finally:
+            resp.close()
 
     def close(self) -> None:
         self._session.close()

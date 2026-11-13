@@ -64,6 +64,7 @@ class ExperimentConfig:
     judge_model: str | None = None
     temperature: float = 0.0
     seed: int = 42
+    qa_split: str | None = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
 
@@ -156,6 +157,9 @@ def load_config(path: str | Path) -> ExperimentConfig:
         raise ConfigError("rerank_candidates는 top_k 이상이어야 합니다")
     if not 0.0 < coverage <= 1.0:
         raise ConfigError("min_evidence_coverage는 (0, 1] 범위여야 합니다")
+    qa_split = data.get("qa_split")
+    if qa_split is not None and qa_split not in ("dev", "test", "unspecified"):
+        raise ConfigError("qa_split은 null, dev, test, unspecified 중 하나여야 합니다")
 
     return ExperimentConfig(
         name=str(data["name"]),
@@ -175,5 +179,6 @@ def load_config(path: str | Path) -> ExperimentConfig:
         judge_model=data.get("judge_model") or None,
         temperature=float(data.get("temperature", 0.0)),
         seed=int(data.get("seed", 42)),
+        qa_split=qa_split,
         raw=data,
     )

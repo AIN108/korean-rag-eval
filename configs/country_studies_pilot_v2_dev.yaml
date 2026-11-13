@@ -1,0 +1,17 @@
+# 중국편을 포함한 4권·40문항 v2. 추출 본문을 저장소에 포함하므로 별도 복사 없이 실행.
+name: country-studies-pilot-v2-dev
+docs_dir: data/country_studies_pilot_v2/docs
+qa_path: data/country_studies_pilot_v2/qa.jsonl
+qa_split: dev
+output_dir: results
+chunking:
+  - { size: 1000, overlap: 200 }
+  - { size: 800, overlap: 100 }
+embed_models: [bge-m3]
+rerankers: [null]
+llm_models: []
+judge_model: null
+top_k: 8
+min_evidence_coverage: 0.5
+temperature: 0.0
+seed: 42
