@@ -1,0 +1,17 @@
+# 업로드 원문 3권에서 작성한 실자료 기반 30문항 파일럿. 모델 성능 측정 결과가 아님.
+name: country-studies-pilot-test
+docs_dir: data/private/country_studies_pilot_v1/docs
+qa_path: data/country_studies_pilot_v1/qa.jsonl
+qa_split: test
+output_dir: results
+chunking:
+  - { size: 1000, overlap: 200 }
+  - { size: 800, overlap: 100 }
+embed_models: [bge-m3]
+rerankers: [null]
+llm_models: []
+judge_model: null
+top_k: 8
+min_evidence_coverage: 0.5
+temperature: 0.0
+seed: 42

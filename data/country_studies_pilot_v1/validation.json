@@ -1,0 +1,438 @@
+{
+  "summary": {
+    "schema_version": 1,
+    "documents": 3,
+    "questions": 30,
+    "answerable": 24,
+    "unanswerable": 6,
+    "split_counts": {
+      "dev": 20,
+      "test": 10
+    },
+    "question_types": {
+      "fact": 6,
+      "numeric": 6,
+      "comparison": 6,
+      "multi_evidence": 6,
+      "unanswerable": 6
+    },
+    "evidence_spans": 32,
+    "all_evidence_matches_verified": true,
+    "chunk_reachability": {
+      "1000/200": {
+        "chunks": 4689,
+        "unreachable_positive_questions": []
+      },
+      "800/100": {
+        "chunks": 5092,
+        "unreachable_positive_questions": []
+      }
+    },
+    "negative_2026_token_occurrences": {
+      "japan.txt": 0,
+      "north_korea.txt": 0,
+      "south_korea.txt": 0
+    },
+    "model_benchmark_run": false,
+    "limitations": [
+      "30문항 파일럿이며 통계적으로 확립된 벤치마크가 아님",
+      "답변 불가 6문항은 모두 판본 이후의 2026년 실측치를 요구하는 쉬운 부정 예시",
+      "텍스트 OCR 철자 오류를 자동 교정하지 않음",
+      "근거가 지시하는 PDF 쪽수는 1부터 시작하는 파일 페이지이며 인쇄 쪽수와 다름"
+    ],
+    "all_evidence_pdf_page_offsets_verified": true,
+    "visually_reviewed_evidence_pdf_pages": {
+      "south_korea.txt": [
+        331,
+        337,
+        338,
+        339,
+        343
+      ],
+      "north_korea.txt": [
+        283,
+        287,
+        306
+      ],
+      "japan.txt": [
+        485,
+        491,
+        492,
+        495,
+        497,
+        501
+      ]
+    },
+    "visually_reviewed_evidence_pdf_page_count": 14,
+    "validated_against_code_commit": "a7ee0e8dba6153349b880b9b4e49bfadd70381b9",
+    "verified_on": "2026-11-13"
+  },
+  "questions": [
+    {
+      "id": "cs-sk-001",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 331,
+          "start": 719559,
+          "end": 719695
+        }
+      ]
+    },
+    {
+      "id": "cs-sk-002",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 338,
+          "start": 734779,
+          "end": 734835
+        }
+      ]
+    },
+    {
+      "id": "cs-sk-003",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 337,
+          "start": 734080,
+          "end": 734224
+        }
+      ]
+    },
+    {
+      "id": "cs-sk-004",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 338,
+          "start": 736389,
+          "end": 736493
+        }
+      ]
+    },
+    {
+      "id": "cs-sk-005",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 338,
+          "start": 734485,
+          "end": 734655
+        }
+      ]
+    },
+    {
+      "id": "cs-sk-006",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 338,
+          "start": 736780,
+          "end": 736855
+        },
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 339,
+          "start": 737476,
+          "end": 737587
+        }
+      ]
+    },
+    {
+      "id": "cs-sk-007",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 343,
+          "start": 745800,
+          "end": 745957
+        },
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 343,
+          "start": 745958,
+          "end": 746153
+        }
+      ]
+    },
+    {
+      "id": "cs-sk-008",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 331,
+          "start": 719016,
+          "end": 719218
+        },
+        {
+          "doc_id": "south_korea.txt",
+          "pdf_page": 331,
+          "start": 719299,
+          "end": 719511
+        }
+      ]
+    },
+    {
+      "id": "cs-sk-009",
+      "answerable": false,
+      "evidences": []
+    },
+    {
+      "id": "cs-sk-010",
+      "answerable": false,
+      "evidences": []
+    },
+    {
+      "id": "cs-nk-001",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 283,
+          "start": 644884,
+          "end": 645065
+        }
+      ]
+    },
+    {
+      "id": "cs-nk-002",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 287,
+          "start": 654495,
+          "end": 654593
+        }
+      ]
+    },
+    {
+      "id": "cs-nk-003",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 283,
+          "start": 645307,
+          "end": 645484
+        }
+      ]
+    },
+    {
+      "id": "cs-nk-004",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 306,
+          "start": 697239,
+          "end": 697419
+        }
+      ]
+    },
+    {
+      "id": "cs-nk-005",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 306,
+          "start": 698783,
+          "end": 698945
+        }
+      ]
+    },
+    {
+      "id": "cs-nk-006",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 306,
+          "start": 698946,
+          "end": 699096
+        }
+      ]
+    },
+    {
+      "id": "cs-nk-007",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 283,
+          "start": 644433,
+          "end": 644554
+        },
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 283,
+          "start": 644555,
+          "end": 644736
+        }
+      ]
+    },
+    {
+      "id": "cs-nk-008",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 287,
+          "start": 653835,
+          "end": 654046
+        },
+        {
+          "doc_id": "north_korea.txt",
+          "pdf_page": 287,
+          "start": 654048,
+          "end": 654212
+        }
+      ]
+    },
+    {
+      "id": "cs-nk-009",
+      "answerable": false,
+      "evidences": []
+    },
+    {
+      "id": "cs-nk-010",
+      "answerable": false,
+      "evidences": []
+    },
+    {
+      "id": "cs-jp-001",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 485,
+          "start": 1112131,
+          "end": 1112225
+        }
+      ]
+    },
+    {
+      "id": "cs-jp-002",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 495,
+          "start": 1136329,
+          "end": 1136486
+        }
+      ]
+    },
+    {
+      "id": "cs-jp-003",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 492,
+          "start": 1130022,
+          "end": 1130075
+        }
+      ]
+    },
+    {
+      "id": "cs-jp-004",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 501,
+          "start": 1150825,
+          "end": 1150998
+        }
+      ]
+    },
+    {
+      "id": "cs-jp-005",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 501,
+          "start": 1150007,
+          "end": 1150195
+        }
+      ]
+    },
+    {
+      "id": "cs-jp-006",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 495,
+          "start": 1136487,
+          "end": 1136687
+        },
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 497,
+          "start": 1140837,
+          "end": 1140930
+        }
+      ]
+    },
+    {
+      "id": "cs-jp-007",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 491,
+          "start": 1128632,
+          "end": 1128820
+        },
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 491,
+          "start": 1128821,
+          "end": 1129087
+        }
+      ]
+    },
+    {
+      "id": "cs-jp-008",
+      "answerable": true,
+      "evidences": [
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 491,
+          "start": 1127928,
+          "end": 1128263
+        },
+        {
+          "doc_id": "japan.txt",
+          "pdf_page": 492,
+          "start": 1129768,
+          "end": 1130021
+        }
+      ]
+    },
+    {
+      "id": "cs-jp-009",
+      "answerable": false,
+      "evidences": []
+    },
+    {
+      "id": "cs-jp-010",
+      "answerable": false,
+      "evidences": []
+    }
+  ]
+}

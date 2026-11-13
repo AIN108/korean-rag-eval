@@ -4,6 +4,8 @@
 
 `data/examples/`의 2개 문서·12문항은 **형식 설명용 허구 자료**입니다. 기존 `data/docs/`와 `data/qa/sample.jsonl`의 6문항도 동작 확인용입니다. 두 예시를 실제 성능 평가 데이터로 집계하지 않습니다.
 
+실제 업로드 원문으로 시작하려면 [Country Studies 파일럿 v1](../data/country_studies_pilot_v1/README.md)을 사용합니다. 한국·북한·일본 3권의 추출 텍스트와 대응하는 한국어 질문 30문항으로 구성되며, 중국편은 전달 실패로 포함하지 않았습니다. `configs/country_studies_pilot_dev.yaml`과 `configs/country_studies_pilot_test.yaml`에서 각각 개발용 20개·최종 평가용 10개 질문을 선택합니다. 원문 3권은 모두 검색 대상에 둡니다.
+
 ## 1. 원문과 출처 정리
 
 실제 자료는 기본적으로 Git에서 제외되는 아래 경로에 보관합니다. 출처 목록은 검색 대상인 `docs/` 밖에 둡니다.
