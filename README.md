@@ -20,19 +20,31 @@
 
 검색 hit는 "같은 문서인가" 대신 **근거 문장의 원문 위치**로 판정합니다. 다만 같은 top-k라도 청크 크기에 따라 문맥 길이가 달라지며, 현재 입력 토큰 예산을 맞추지는 않습니다.
 
-실제 데이터는 [데이터 준비 안내](docs/DATASET_GUIDE.md)에 따라 준비하세요. 기존 6문항은 동작 확인용이고, [새 형식의 12문항 예제](data/examples/qa.jsonl)도 허구 자료이므로 대표 성능으로 사용하지 않습니다.
+실자료로 바로 시작하려면 아래 Country Studies 파일럿을 사용하고, 다른 자료를 추가하려면 [데이터 준비 안내](docs/DATASET_GUIDE.md)를 참고하세요. 기존 6문항은 동작 확인용이고, [새 형식의 12문항 예제](data/examples/qa.jsonl)도 허구 자료이므로 대표 성능으로 사용하지 않습니다.
 
-[Country Studies 실자료 파일럿](data/country_studies_pilot_v1/README.md)은 업로드된 한국·북한·일본 원문에서 작성한 한국어 30문항입니다. 개발용 20문항과 최종 평가용 10문항으로 분리했으며, 원문 근거 32개의 일치를 검증했습니다. 실제 모델 성능은 아직 측정하지 않았습니다. 추출 코퍼스는 안내한 Git 제외 경로에 별도로 준비합니다.
+[Country Studies 실자료 파일럿 v2](data/country_studies_pilot_v2/README.md)는 한국·북한·일본·중국 원문 4권의 추출 텍스트와 한국어 40문항을 함께 포함합니다. 개발용 20문항과 최종 평가용 20문항으로 분리했으며, 답변 가능한 32문항의 원문 근거 42개를 검증했습니다. 저장소를 받으면 별도 PDF·ZIP 복사 없이 실행할 수 있습니다. 실제 모델 성능은 아직 측정하지 않았으며, [v1의 기존 30문항](data/country_studies_pilot_v1/README.md)도 유지합니다.
 
 ## 빠른 시작
 
-전제: Python 3.10+, [Ollama](https://ollama.com) 설치 및 실행 중.
+전제: Python 3.10+. 데이터 검증에는 모델이 필요하지 않으며, 검색·답변 실험에는 [Ollama](https://ollama.com)가 실행 중이어야 합니다.
 
 ```bash
 git clone https://github.com/AIN108/korean-rag-eval && cd korean-rag-eval
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"            # HF 임베딩·reranker는 ".[dev,hf]", PDF는 ".[pdf]"
 
+python -m rag_eval validate --config configs/country_studies_pilot_v2_dev.yaml
+python -m rag_eval validate --config configs/country_studies_pilot_v2_test.yaml
+
+ollama pull bge-m3
+python -m rag_eval run --config configs/country_studies_pilot_v2_dev.yaml -v  # 실자료 검색 전용
+```
+
+개발용으로 설정을 정한 뒤 `country_studies_pilot_v2_test.yaml`로 최종 평가합니다. 기본 `llm_models: []`는 검색만 실행하므로 답변 정확도를 측정하려면 답변 모델을 지정합니다. 위 가상환경 활성화 명령은 Bash용이며, Windows PowerShell에서는 `.venv\Scripts\Activate.ps1`을 사용합니다.
+
+허구 자료로 도구 동작만 확인하거나 기존 비교 설정을 실행하려면 아래 명령을 사용합니다.
+
+```bash
 ollama pull bge-m3 && ollama pull qwen2.5:7b   # 설정 파일에 적은 모델을 받습니다
 
 python -m rag_eval validate --config configs/default.yaml   # 문서·QA셋 검증
@@ -90,7 +102,7 @@ query_expansions:                            # 검색 질의에만 적용, LLM�
 
 `data/docs/`에 `.txt` / `.md` / `.pdf` 문서를 넣고, `data/qa/*.jsonl`에 한 줄에 하나씩 질문을 작성합니다. PDF는 `pip install -e ".[pdf]"`가 필요하며, 추출한 텍스트는 `results/.cache/text/`에 캐시됩니다. 텍스트 층이 없는 스캔 PDF는 경고 후 건너뜁니다.
 
-`lags_ablation` 실험용 문서는 미 의회도서관 Country Studies(Federal Research Division) PDF를 `data/country_studies/`에 넣어 사용합니다. 용량 때문에 저장소에는 포함하지 않습니다(`.gitignore`). 미국 연방정부 저작물이라 퍼블릭 도메인으로 알려져 있지만, 질의셋을 공개하기 전에 각 판본의 출처 페이지에서 이용 조건을 확인하세요. 상용 출판물(예: IISS The Military Balance)은 질의셋 근거 문장으로도 쓰지 않습니다.
+`country_studies_pilot_v2_*` 설정은 저장소에 포함한 `data/country_studies_pilot_v2/docs/`의 텍스트를 사용합니다. 원본 PDF는 포함하지 않습니다. 기존 `lags_ablation` 설정을 그대로 쓰려면 별도로 PDF를 `data/country_studies/`에 넣어야 합니다. 출처·해시와 권리 안내는 파일럿의 `sources.jsonl`에 기록했습니다. 새로운 자료를 공개할 때에도 해당 판본의 이용 조건을 확인합니다.
 
 ```json
 {"id": "q001", "question": "GPU 서버는 언제까지 예약해야 하나요?", "answer": "사용 3일 전까지",

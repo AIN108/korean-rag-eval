@@ -4,11 +4,16 @@
 
 `data/examples/`의 2개 문서·12문항은 **형식 설명용 허구 자료**입니다. 기존 `data/docs/`와 `data/qa/sample.jsonl`의 6문항도 동작 확인용입니다. 두 예시를 실제 성능 평가 데이터로 집계하지 않습니다.
 
-실제 업로드 원문으로 시작하려면 [Country Studies 파일럿 v1](../data/country_studies_pilot_v1/README.md)을 사용합니다. 한국·북한·일본 3권의 추출 텍스트와 대응하는 한국어 질문 30문항으로 구성되며, 중국편은 전달 실패로 포함하지 않았습니다. `configs/country_studies_pilot_dev.yaml`과 `configs/country_studies_pilot_test.yaml`에서 각각 개발용 20개·최종 평가용 10개 질문을 선택합니다. 원문 3권은 모두 검색 대상에 둡니다.
+실제 업로드 원문으로 시작하려면 [Country Studies 파일럿 v2](../data/country_studies_pilot_v2/README.md)를 사용합니다. 한국·북한·일본·중국 4권의 추출 텍스트와 대응하는 한국어 질문 40문항이 프로젝트에 포함되어 별도 파일 복사가 필요 없습니다. `configs/country_studies_pilot_v2_dev.yaml`과 `configs/country_studies_pilot_v2_test.yaml`에서 각각 개발용 20개·최종 평가용 20개 질문을 선택합니다. 원문 4권은 모두 검색 대상에 둡니다. 답변 가능한 32문항과 답변 불가 8문항을 구분하며, 기존 v1의 30문항은 변경하지 않았습니다.
+
+```bash
+python -m rag_eval validate --config configs/country_studies_pilot_v2_dev.yaml
+python -m rag_eval validate --config configs/country_studies_pilot_v2_test.yaml
+```
 
 ## 1. 원문과 출처 정리
 
-실제 자료는 기본적으로 Git에서 제외되는 아래 경로에 보관합니다. 출처 목록은 검색 대상인 `docs/` 밖에 둡니다.
+별도로 추가하는 비공개·검수 중 자료는 Git에서 제외되는 아래 경로에 보관합니다. 공개 파일럿의 추출 텍스트는 해당 버전의 `docs/`에 함께 포함합니다. 출처 목록은 검색 대상인 `docs/` 밖에 둡니다.
 
 ```text
 data/private/
@@ -36,7 +41,7 @@ python -m rag_eval export-text --config configs/user_data.example.yaml
 
 이 명령은 QA 파일이 아직 없어도 실행됩니다. 매번 새 `results/annotation-text-.../` 폴더를 만들고, 정규화된 텍스트와 `index.json`을 저장합니다. QA의 `doc_id`에는 내보낸 `.txt` 이름이 아니라 `index.json`의 **원래 문서 ID**를 씁니다.
 
-여기서 복사한 문장을 `evidences[].text`에 넣습니다. 공백·줄바꿈 차이는 무시하지만, PDF에서 단어가 깨지거나 하이픈이 생기면 그대로 확인해야 합니다. 스캔 PDF는 현재 OCR하지 않고 경고 후 제외하므로 먼저 텍스트 추출 상태를 확인합니다. 페이지 번호는 현재 평가기의 근거 위치 정보에 포함되지 않습니다.
+여기서 복사한 문장을 `evidences[].text`에 넣습니다. 공백·줄바꿈 차이는 무시하지만, PDF에서 단어가 깨지거나 하이픈이 생기면 그대로 확인해야 합니다. 스캔 PDF는 현재 OCR하지 않고 경고 후 제외하므로 먼저 텍스트 추출 상태를 확인합니다. 평가기의 정답 판정은 문자 위치를 사용합니다. 공개 파일럿에는 원문 대조를 위해 `pdf_page`와 `page_index.json`도 추가했습니다.
 
 ## 3. 질문 작성과 검수
 

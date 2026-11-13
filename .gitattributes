@@ -1,0 +1,3 @@
+# 추출 본문은 데이터로 관리하고 GitHub의 코드 변경 화면에서는 기본 접는다.
+data/country_studies_pilot_v1/docs/*.txt text eol=lf linguist-generated=true
+data/country_studies_pilot_v2/docs/*.txt text eol=lf linguist-generated=true

@@ -1,6 +1,6 @@
 # 업로드 원문 3권에서 작성한 실자료 기반 30문항 파일럿. 모델 성능 측정 결과가 아님.
 name: country-studies-pilot-test
-docs_dir: data/private/country_studies_pilot_v1/docs
+docs_dir: data/country_studies_pilot_v1/docs
 qa_path: data/country_studies_pilot_v1/qa.jsonl
 qa_split: test
 output_dir: results
