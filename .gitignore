@@ -12,3 +12,6 @@ results/
 
 # 대용량 원문 PDF는 저장소에 넣지 않는다 (README의 데이터 준비 절차 참고)
 data/country_studies/
+
+# 실제 사용 문서·검수 중인 질문셋·출처 목록은 기본적으로 로컬 보관.
+data/private/

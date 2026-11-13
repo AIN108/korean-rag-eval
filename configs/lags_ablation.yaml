@@ -32,7 +32,7 @@ rerankers: [null]
 llm_models:
   - qwen2.5:7b
   - gemma3n:e2b
-judge_model: qwen2.5:7b
+judge_model: null    # 답변 모델과 다른 채점 모델을 선택한 뒤 활성화
 
 top_k: 8              # 원본 앱의 k
 min_evidence_coverage: 0.5

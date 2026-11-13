@@ -1,0 +1,17 @@
+# docs/DATASET_GUIDE.md에 따라 실제 문서와 검수한 질문을 먼저 준비한다.
+name: user-data
+docs_dir: data/private/docs
+qa_path: data/private/qa.jsonl
+qa_split: dev
+output_dir: results
+chunking:
+  - { size: 1000, overlap: 200 }
+  - { size: 800, overlap: 100 }
+embed_models: [bge-m3]
+rerankers: [null]
+llm_models: []          # 먼저 검색을 비교한 뒤 답변 모델을 추가
+judge_model: null      # 답변 모델과 다른 채점 모델을 선택한 뒤 활성화
+top_k: 8
+min_evidence_coverage: 0.5
+temperature: 0.0
+seed: 42
