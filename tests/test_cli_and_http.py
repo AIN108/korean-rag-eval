@@ -59,6 +59,24 @@ def test_invalid_http_response_becomes_domain_error_and_closes(response):
         client.close()
 
 
+@pytest.mark.parametrize(("value", "expected"), [
+    ("0.0.0.0", "http://0.0.0.0:11434"),
+    ("localhost", "http://localhost:11434"),
+    ("127.0.0.1:8080", "http://127.0.0.1:8080"),
+    ("[::1]", "http://[::1]:11434"),
+    ("gpu-box/ollama/", "http://gpu-box:11434/ollama"),
+    # 스킴을 명시한 값은 기존처럼 그대로 쓴다.
+    ("http://localhost:11434", "http://localhost:11434"),
+    ("https://ollama.example.com", "https://ollama.example.com"),
+])
+def test_base_url_defaults_to_ollama_port_without_scheme(value, expected):
+    client = OllamaClient(value)
+    try:
+        assert client.base_url == expected
+    finally:
+        client.close()
+
+
 def test_timeout_is_reported_without_uncaught_requests_exception():
     client = OllamaClient("http://localhost:11434", timeout=1)
     client._session.post = Mock(side_effect=requests.Timeout())

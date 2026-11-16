@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit
 
 import numpy as np
 import requests
+
+DEFAULT_PORT = 11434
 
 
 class OllamaError(RuntimeError):
@@ -16,7 +19,10 @@ class OllamaClient:
     def __init__(self, base_url: str, timeout: float = 300.0) -> None:
         self.base_url = base_url.rstrip("/")
         if not self.base_url.startswith(("http://", "https://")):
-            self.base_url = "http://" + self.base_url
+            # Ollama CLI와 같이 스킴 없는 값(예: OLLAMA_HOST=0.0.0.0)은 포트가 없으면 11434를 쓴다.
+            parts = urlsplit("//" + self.base_url)
+            netloc = parts.netloc if parts.port is not None else f"{parts.netloc}:{DEFAULT_PORT}"
+            self.base_url = f"http://{netloc}{parts.path}"
         self.timeout = timeout
         self._session = requests.Session()
 
