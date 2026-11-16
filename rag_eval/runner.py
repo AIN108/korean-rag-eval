@@ -66,17 +66,18 @@ def run_experiment(
     cache_dir = cfg.output_dir / ".cache"
     docs = load_documents(cfg.docs_dir, text_cache_dir=cache_dir / "text")
     items = load_qa(cfg.qa_path, docs, split=cfg.qa_split)
-    out_dir = _new_run_dir(cfg.output_dir, cfg.name)
-    if config_path is not None:
-        shutil.copy(config_path, out_dir / "config.yaml")
-    log.info("문서 %d개, 질문 %d개 → %s", len(docs), len(items), out_dir)
-
+    # reranker 로드 실패(예: sentence-transformers 미설치)로 manifest 없는 빈 결과 폴더가 남지 않도록
+    # 결과 폴더를 만들기 전에 준비한다.
     judge = chat_factory(cfg.judge_model) if cfg.judge_model else None
     if cfg.judge_model and cfg.judge_model in cfg.llm_models:
         log.warning("답변과 채점에 같은 모델 '%s'가 포함되어 있습니다", cfg.judge_model)
     rerankers = {
         name: (reranker_factory or _missing_reranker)(name) for name in cfg.rerankers if name
     }
+    out_dir = _new_run_dir(cfg.output_dir, cfg.name)
+    if config_path is not None:
+        shutil.copy(config_path, out_dir / "config.yaml")
+    log.info("문서 %d개, 질문 %d개 → %s", len(docs), len(items), out_dir)
     # 확장은 검색 질의에만 적용하고, LLM에는 원래 질문을 준다 (답변 프롬프트를 조건 간 동일하게 유지).
     expanded = {
         path: [expand_query(it.question, load_glossary(path) if path else None) for it in items]
