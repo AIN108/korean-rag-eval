@@ -90,8 +90,8 @@ query_expansions:                            # 검색 질의에만 적용, LLM�
 
 | 비교 항목 | 조건 | 출처 |
 |---|---|---|
-| 청크 | 1000/200 vs 800/100 | `rag.py` → v5 이후 |
-| 임베딩 | multilingual-e5-large vs bge-m3 | v5·v6 vs `lags3.py` |
+| 청크 | 1000/200 vs 800/100 | `legacy/rag.py` → v5 이후 |
+| 임베딩 | multilingual-e5-large vs bge-m3 | v5·v6 vs `legacy/lags3.py` |
 | e5 접두어 | 없음(원본 앱) vs `query:`/`passage:` | e5 모델 권장 사용법 |
 | 질의 확장 | 없음 vs 한→영 용어집 | `preprocess_question` |
 | LLM | qwen2.5:7b vs gemma3n:e2b | `lags5.py` 지원 모델 |
