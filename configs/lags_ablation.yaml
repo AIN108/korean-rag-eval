@@ -4,6 +4,7 @@
 #   - 질의 확장: preprocess_question의 한→영 용어 덧붙이기 유무
 #   - LLM: lags5.py가 지원하는 qwen2.5:7b, gemma3n:e2b
 # 문서: 미 의회도서관 Country Studies PDF (저장소에는 포함하지 않음, README 참고)
+# 질문셋: data/qa/country_studies.jsonl도 저장소에 없으므로 위 PDF 기준으로 직접 작성해야 함 (docs/DATASET_GUIDE.md)
 # 필요 패키지: pip install -e ".[hf,pdf]"
 name: lags-ablation
 docs_dir: data/country_studies
