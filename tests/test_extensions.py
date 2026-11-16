@@ -141,3 +141,16 @@ def test_prefixes_and_expansion_grid(tmp_path, sample_docs_dir, sample_qa_path):
     assert not any("graphics accelerator" in r.get("answer", "") for r in rows)
     summary = (out / "summary.md").read_text("utf-8")
     assert "질의 확장" in summary and "prefixed" in summary
+
+
+def test_reranker_load_failure_leaves_no_run_dir(tmp_path, sample_docs_dir, sample_qa_path):
+    cfg = load_config(_config(tmp_path, sample_docs_dir, sample_qa_path,
+                              rerankers=[None, "some/reranker"], rerank_candidates=4))
+
+    def failing_reranker(name):
+        raise ImportError("sentence-transformers가 없습니다")
+
+    with pytest.raises(ImportError):
+        run_experiment(cfg, lambda spec: FakeEmbedder(), lambda m: FakeChat(), failing_reranker)
+    results = tmp_path / "results"
+    assert not [p for p in results.glob("*") if p.name != ".cache"]
