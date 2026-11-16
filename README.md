@@ -102,7 +102,7 @@ query_expansions:                            # 검색 질의에만 적용, LLM�
 
 `data/docs/`에 `.txt` / `.md` / `.pdf` 문서를 넣고, `data/qa/*.jsonl`에 한 줄에 하나씩 질문을 작성합니다. PDF는 `pip install -e ".[pdf]"`가 필요하며, 추출한 텍스트는 `results/.cache/text/`에 캐시됩니다. 텍스트 층이 없는 스캔 PDF는 경고 후 건너뜁니다.
 
-`country_studies_pilot_v2_*` 설정은 저장소에 포함한 `data/country_studies_pilot_v2/docs/`의 텍스트를 사용합니다. 원본 PDF는 포함하지 않습니다. 기존 `lags_ablation` 설정을 그대로 쓰려면 별도로 PDF를 `data/country_studies/`에 넣어야 합니다. 출처·해시와 권리 안내는 파일럿의 `sources.jsonl`에 기록했습니다. 새로운 자료를 공개할 때에도 해당 판본의 이용 조건을 확인합니다.
+`country_studies_pilot_v2_*` 설정은 저장소에 포함한 `data/country_studies_pilot_v2/docs/`의 텍스트를 사용합니다. 원본 PDF는 포함하지 않습니다. 기존 `lags_ablation` 설정을 그대로 쓰려면 별도로 PDF를 `data/country_studies/`에 넣고, 그 PDF를 기준으로 한 질문셋 `data/qa/country_studies.jsonl`도 직접 작성해야 합니다(두 파일 모두 저장소에 포함되지 않음, 작성 방법은 [데이터 준비 안내](docs/DATASET_GUIDE.md)). 출처·해시와 권리 안내는 파일럿의 `sources.jsonl`에 기록했습니다. 새로운 자료를 공개할 때에도 해당 판본의 이용 조건을 확인합니다.
 
 ```json
 {"id": "q001", "question": "GPU 서버는 언제까지 예약해야 하나요?", "answer": "사용 3일 전까지",
