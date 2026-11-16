@@ -147,7 +147,7 @@ def load_config(path: str | Path) -> ExperimentConfig:
         if not data.get(key):
             raise ConfigError(f"필수 항목 '{key}'가 없습니다")
 
-    rerankers = [r or None for r in data.get("rerankers", [None])]
+    rerankers = [r or None for r in (_require_list(data, "rerankers") if "rerankers" in data else [None])]
     top_k = int(data.get("top_k", 4))
     rerank_candidates = int(data.get("rerank_candidates", 20))
     coverage = float(data.get("min_evidence_coverage", 0.5))

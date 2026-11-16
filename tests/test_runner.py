@@ -75,8 +75,19 @@ def test_retrieval_only_mode(tmp_path, sample_docs_dir, sample_qa_path):
         {"embed_models": []},
         {"top_k": 0},
         {"rerankers": ["x"], "rerank_candidates": 1},
+        {"rerankers": "BAAI/bge-reranker-v2-m3"},
+        {"rerankers": []},
+        {"rerankers": None},
     ],
 )
 def test_invalid_config(tmp_path, sample_docs_dir, sample_qa_path, override):
     with pytest.raises(ConfigError):
         load_config(_write_config(tmp_path, sample_docs_dir, sample_qa_path, **override))
+
+
+def test_rerankers_default_when_omitted(tmp_path, sample_docs_dir, sample_qa_path):
+    path = _write_config(tmp_path, sample_docs_dir, sample_qa_path)
+    data = yaml.safe_load(path.read_text("utf-8"))
+    del data["rerankers"]
+    path.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    assert load_config(path).rerankers == [None]
